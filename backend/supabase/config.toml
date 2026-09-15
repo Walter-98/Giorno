@@ -1,0 +1,3 @@
+[functions.giorno-push]
+verify_jwt = false
+# La funzione verifica sempre x-giorno-secret, custodito nel Vault e negli Edge secrets.
