@@ -1,1 +1,30 @@
-{"id": "./", "name": "Giorno \u00b7 Una cosa alla volta", "short_name": "Giorno", "start_url": "./", "scope": "./", "display": "standalone", "background_color": "#f6f8f8", "theme_color": "#153c39", "icons": [{"src": "icon-192.png", "sizes": "192x192", "type": "image/png"}, {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"}]}
+{
+  "id": "./",
+  "name": "Giorno · Una cosa alla volta",
+  "short_name": "Giorno",
+  "description": "Un programma realistico per la giornata: una priorità alla volta, il tempo libero che resta libero, faccende di casa e spesa condivise con la famiglia.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "categories": ["productivity", "lifestyle", "utilities"],
+  "background_color": "#f6f8f8",
+  "theme_color": "#153c39",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "screenshots": [
+    {"src": "screenshot-oggi.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "La giornata a colpo d'occhio"},
+    {"src": "screenshot-settimana.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow", "label": "La settimana e le scadenze in arrivo"}
+  ],
+  "shortcuts": [
+    {"name": "Ho tempo adesso", "short_name": "Tempo libero", "url": "./?vista=tempo"},
+    {"name": "La settimana", "short_name": "Settimana", "url": "./?vista=settimana"},
+    {"name": "Lista della spesa", "short_name": "Spesa", "url": "./?vista=spesa"}
+  ]
+}

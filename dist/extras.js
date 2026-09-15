@@ -60,3 +60,5 @@ function renderReport(){const from=$('reportFrom').value,to=$('reportTo').value;
 $('openReport').onclick=()=>{$('reportTo').value=$('date').value;$('reportFrom').value=plus($('date').value,-6);renderReport();$('reportDialog').showModal();};
 $('reportFrom').onchange=$('reportTo').onchange=renderReport;
 renderWeek();
+const vista=new URLSearchParams(location.search).get('vista');
+if(vista==='settimana')switchArea('week');else if(vista==='spesa')switchArea('shop');else if(vista==='tempo')$('freeNow').click();
