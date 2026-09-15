@@ -12,7 +12,7 @@ La versione locale funziona già. Famiglia online e Web Push richiedono un servi
 6. Registrare due account di prova, confermare le email, creare una famiglia e usare il codice monouso con il secondo account. Il codice dura 24 ore; un nuovo invito revoca il precedente. Un massimo di dieci membri è imposto dal database.
 7. Verificare che una terza persona non appartenente alla famiglia non veda né modifichi le voci. Le tabelle non sono accessibili direttamente ai client: le funzioni verificano l’identità e l’appartenenza sul server.
 
-Le liste condivise sono separate da quelle personali. Non viene caricato automaticamente il programma privato. La sincronizzazione si aggiorna ogni dieci secondi mentre la lista è aperta. Le scritture richiedono connessione; i conflitti tra modifiche simultanee vengono rifiutati invece di sovrascrivere dati. L’amministratore può revocare un membro; i membri possono lasciare il gruppo. Per rimuovere il creatore serve una futura funzione di trasferimento proprietà.
+Le voci condivise compaiono direttamente nelle schede Famiglia e Spesa, con l’etichetta “Condivisa”, e si aggiornano ogni dieci secondi mentre quella scheda è aperta. Portano solo titolo, persona e stato: data, ripetizione e preavviso restano sul dispositivo che le ha create. Le liste condivise sono separate da quelle personali. Non viene caricato automaticamente il programma privato. La sincronizzazione si aggiorna ogni dieci secondi mentre la lista è aperta. Le scritture richiedono connessione; i conflitti tra modifiche simultanee vengono rifiutati invece di sovrascrivere dati. L’amministratore può revocare un membro; i membri possono lasciare il gruppo. Per rimuovere il creatore serve una futura funzione di trasferimento proprietà.
 
 ## Web Push
 
@@ -31,4 +31,4 @@ Riferimenti: https://supabase.com/docs/guides/functions/schedule-functions e htt
 
 ## Stato di verifica
 
-Verificati localmente: sintassi JavaScript, regole di pianificazione, parsing rapido, ricorrenze e compatibilità del salvataggio locale. SQL, autenticazione, sincronizzazione e consegna Web Push richiedono i test d’integrazione sul progetto configurato: non sono ancora stati eseguiti.
+Verificati localmente: sintassi JavaScript, regole di pianificazione, parsing rapido, ricorrenze mensili e annuali, preavvisi, routine, import .ics, resoconto e compatibilità del salvataggio locale (15 test in `tests/`, più una prova d’uso completa in browser). SQL, autenticazione, sincronizzazione e consegna Web Push richiedono i test d’integrazione sul progetto configurato: non sono ancora stati eseguiti.
