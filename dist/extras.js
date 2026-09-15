@@ -55,10 +55,31 @@ function renderReport(){const from=$('reportFrom').value,to=$('reportTo').value;
  $('reportBody').innerHTML=`<div class="report-grid"><div class="report-card"><b>${r.blocksDone}/${r.blocksTotal}</b><span>blocchi completati</span></div><div class="report-card"><b>${hours(r.completed)}</b><span>di ${hours(r.planned)} programmate</span></div><div class="report-card"><b>${r.workDone}/${r.workTotal}</b><span>attività di lavoro</span></div><div class="report-card"><b>${r.familyDone}/${r.familyTotal}</b><span>faccende con data</span></div></div>
  <h3>Come è distribuito il tempo</h3><p class="small">Da fare ${hours(r.kinds.task||0)} · Impegni fissi ${hours(r.kinds.fixed||0)} · Pause ${hours(r.kinds.break||0)}</p>
  <div class="report-days">${r.days.map(d=>`<div class="report-day"><span>${niceDate(d.date).split(' ')[0]}</span><div class="bar"><i style="height:${Math.round(d.minutes/top*100)}%"></i></div><span class="small">${d.total?d.done+'/'+d.total:'–'}</span></div>`).join('')}</div>
+ <h3>Stime e tempi reali</h3><p class="small">${r.misurate?`Su ${r.misurate} ${r.misurate===1?'attività misurata':'attività misurate'}: stimate ${hours(r.stima)}, in realtà ${hours(r.reale)}${r.stima?' ('+(r.reale>r.stima?'+':'')+Math.round((r.reale-r.stima)/r.stima*100)+'%)':''}.`:'Nessuna attività di lavoro con la durata reale in questo periodo. Scrivila nel modulo dell’attività quando hai finito.'}</p>
  <h3>Cosa continua a slittare</h3>${r.slipping.length?'<ul class="report-list">'+r.slipping.map(x=>`<li>${esc(x.title)} · rimandata ${x.moved} volte</li>`).join('')+'</ul>':'<p class="small">Niente che si trascini da più di due rinvii. Buon segno.</p>'}
  <h3>Ancora da incastrare</h3><p class="small">${r.pending} ${r.pending===1?'impegno in lista':'impegni in lista'}${r.waiting?' · '+r.waiting+' in attesa di un passo o di una risposta':''}.${r.busiest&&r.busiest.minutes?' Giornata più carica: '+niceDate(r.busiest.date)+' con '+hours(r.busiest.minutes)+'.':''}</p>`;}
 $('openReport').onclick=()=>{$('reportTo').value=$('date').value;$('reportFrom').value=plus($('date').value,-6);renderReport();$('reportDialog').showModal();};
 $('reportFrom').onchange=$('reportTo').onchange=renderReport;
 renderWeek();
+
+const prefs=()=>data.prefs||{theme:'auto',size:'normale'};
+$('openSettings').onclick=()=>{$('themeChoice').value=prefs().theme;$('sizeChoice').value=prefs().size;$('settingsDialog').showModal();};
+function salvaPrefs(){const n=structuredClone(data);n.prefs={theme:$('themeChoice').value,size:$('sizeChoice').value};if(!GiornoDaily.validPrefs(n.prefs))return;if(commit(n))applicaAspetto();}
+$('themeChoice').onchange=$('sizeChoice').onchange=salvaPrefs;
+
+const etichetta={blocks:'Programma',inbox:'Da incastrare',work:'Lavoro',family:'Famiglia'};
+let risultati=[];
+function renderRicerca(){const q=$('searchText').value;risultati=GiornoExtras.cerca(data,q,$('searchDone').checked);
+ if(q.trim().length<2){$('searchResults').innerHTML='<div class="list-empty">Scrivi almeno due lettere.</div>';return;}
+ $('searchResults').innerHTML=risultati.map((r,i)=>`<button class="search-row" data-result="${i}"><span class="shared-tag">${etichetta[r.area]}</span><strong>${esc(r.title)}</strong><span class="small">${r.date?niceDate(r.date):'senza data'}${r.extra?' · '+esc(r.extra):''}${r.done?' · completata':''}</span>${r.note?`<span class="note-line">${esc(r.note)}</span>`:''}</button>`).join('')||'<div class="list-empty">Nessun risultato. Prova con una parola più corta.</div>';}
+$('openSearch').onclick=()=>{$('searchText').value='';$('searchResults').innerHTML='<div class="list-empty">Scrivi almeno due lettere.</div>';$('searchDialog').showModal();$('searchText').focus();};
+$('searchForm').onsubmit=e=>{e.preventDefault();renderRicerca();};
+$('searchText').oninput=renderRicerca;$('searchDone').onchange=renderRicerca;
+document.addEventListener('click',e=>{const b=e.target.closest('[data-result]');if(!b)return;const r=risultati[Number(b.dataset.result)];if(!r)return;$('searchDialog').close();
+ if(r.area==='blocks'){switchArea('today');day(r.date);}
+ else if(r.area==='work'){switchArea('work');day(r.date);}
+ else if(r.area==='family'){switchArea('family');if(r.date)day(r.date);}
+ else {switchArea('today');$('inboxList').scrollIntoView({behavior:'smooth',block:'center'});}
+ message(r.title);});
 const vista=new URLSearchParams(location.search).get('vista');
-if(vista==='settimana')switchArea('week');else if(vista==='spesa')switchArea('shop');else if(vista==='tempo')$('freeNow').click();
+if(vista==='settimana')switchArea('week');else if(vista==='cerca')$('openSearch').click();else if(vista==='tempo')$('freeNow').click();

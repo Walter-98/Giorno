@@ -60,3 +60,29 @@ test('il resoconto conta solo il periodo scelto e segnala i rinvii', ()=>{
  assert.equal(JSON.stringify(r.slipping),JSON.stringify([{title:'B',moved:3}]));
  assert.equal(r.waiting,1);assert.equal(r.busiest.date,'2026-09-16');
 });
+
+test('la ricerca guarda anche le note e rispetta le completate', ()=>{
+ const data={blocks:[{id:'b1',title:'Offerta depuratore',date:'2026-09-15',start:'09:00',end:'10:00',done:false,note:'chiamare Rossi'}],
+  inbox:[{id:'i1',title:'Meccanico',duration:60}],
+  work:[{id:'w1',title:'Offerta',date:'2026-09-10',minutes:30,actual:40,done:true}],
+  family:[{id:'f1',title:'Bollo',date:'2026-09-20',person:'Walter',done:false}]};
+ assert.equal(x.cerca(data,'rossi',false).length,1);
+ assert.equal(x.cerca(data,'offerta',false).length,1);
+ assert.equal(x.cerca(data,'offerta',true).length,2);
+ assert.equal(x.cerca(data,'o',true).length,0);
+ assert.equal(x.cerca(data,'walter',false)[0].title,'Bollo');
+ assert.equal(x.cerca(data,'MECCANICO',false)[0].area,'inbox');
+});
+test('la durata suggerita usa la mediana delle misure', ()=>{
+ const work=[{id:'a',title:'Offerta',actual:40},{id:'b',title:'offerta',actual:50},{id:'c',title:'Offerta',actual:60},{id:'d',title:'Altro',actual:10}];
+ assert.equal(x.durataSuggerita(work,'Offerta').minuti,50);
+ assert.equal(x.durataSuggerita(work,'Offerta').volte,3);
+ assert.equal(x.durataSuggerita(work,'Mai fatta'),null);
+ assert.equal(x.durataSuggerita([{id:'a',title:'Giro',minutes:30}],'Giro'),null);
+});
+test('il resoconto confronta stima e tempo reale', ()=>{
+ const data={blocks:[],work:[{id:'w1',title:'A',date:'2026-09-15',minutes:30,actual:45,done:true},
+  {id:'w2',title:'B',date:'2026-09-15',minutes:60,priority:false,done:false}],family:[],inbox:[]};
+ const r=x.weekReport(data,'2026-09-14','2026-09-20');
+ assert.equal(r.misurate,1);assert.equal(r.stima,30);assert.equal(r.reale,45);
+});

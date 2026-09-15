@@ -1,2 +1,12 @@
 .sites-runtime/
 .DS_Store
+# segreti: chiavi di firma, VAPID, password
+backend/SEGRETI-non-condividere.txt
+*.keystore
+signing-key-info.txt
+Giorno - Google Play package/
+Giorno - Google Play package.zip
+*.apk
+*.aab
+# cartelle di lavoro locali
+Claude outputs/

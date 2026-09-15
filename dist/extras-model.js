@@ -55,6 +55,25 @@ function weekReport(data,from,to){
  const busiest=days.slice().sort((a,b)=>b.minutes-a.minutes)[0]||null;
  return {days,planned,completed,kinds,blocksDone:blocks.filter(b=>b.done).length,blocksTotal:blocks.length,
   workDone:work.filter(x=>x.done).length,workTotal:work.length,familyDone:family.filter(x=>x.done).length,familyTotal:family.length,
-  waiting:(data.inbox||[]).filter(x=>x.waiting).length,pending:(data.inbox||[]).length,slipping,busiest};}
-const api={parseICS,applyTemplate,weekReport};if(typeof module!=='undefined')module.exports=api;else root.GiornoExtras=api;
+  waiting:(data.inbox||[]).filter(x=>x.waiting).length,pending:(data.inbox||[]).length,slipping,busiest,
+  stima:work.filter(x=>x.actual).reduce((n,x)=>n+x.minutes,0),reale:work.filter(x=>x.actual).reduce((n,x)=>n+x.actual,0),misurate:work.filter(x=>x.actual).length};}
+function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+function cerca(data,query,includiFatte){
+ const q=norm(query);if(q.length<2)return [];
+ const out=[];
+ const push=(area,x,date,extra)=>{if(!includiFatte&&x.done)return;
+  const testo=norm(x.title)+' '+norm(x.note)+' '+norm(x.person);
+  if(!testo.includes(q))return;
+  out.push({area,id:x.id,title:x.title,date:date||'',done:!!x.done,note:x.note||'',extra:extra||''});};
+ (data.blocks||[]).forEach(x=>push('blocks',x,x.date,x.start+'–'+x.end));
+ (data.inbox||[]).forEach(x=>push('inbox',x,x.deadline||'',(x.duration||30)+' min'));
+ (data.work||[]).forEach(x=>push('work',x,x.date,(x.minutes||0)+' min'+(x.actual?' · reali '+x.actual:'')));
+ (data.family||[]).forEach(x=>push('family',x,x.date||'',x.person||''));
+ return out.sort((a,b)=>(b.date||'0').localeCompare(a.date||'0')||a.title.localeCompare(b.title)).slice(0,40);}
+function durataSuggerita(work,titolo){const q=norm(titolo);if(q.length<3)return null;
+ const v=(work||[]).filter(x=>x.actual&&norm(x.title)===q).map(x=>x.actual).sort((a,b)=>a-b);
+ if(!v.length)return null;
+ const m=v.length%2?v[(v.length-1)/2]:Math.round((v[v.length/2-1]+v[v.length/2])/2);
+ return {minuti:Math.max(5,Math.round(m/5)*5),volte:v.length};}
+const api={parseICS,applyTemplate,weekReport,cerca,durataSuggerita};if(typeof module!=='undefined')module.exports=api;else root.GiornoExtras=api;
 })(globalThis);
