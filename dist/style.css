@@ -67,3 +67,5 @@ dialog textarea{width:100%;padding:12px;border:1px solid var(--c7);border-radius
 .scorciatoie{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
 .scorciatoie button{font-size:13px;min-height:38px;padding:8px 12px;border-radius:999px}
 .nudge{background:var(--c5);border:1px solid var(--c3);border-radius:12px;padding:12px 14px;margin:0 0 16px;font-size:14px;line-height:1.5}
+#toast{display:flex;align-items:center;gap:12px}
+#toast #annullaBtn{background:transparent;border:1px solid var(--c18);color:var(--c16);min-height:34px;padding:5px 12px;font-size:13px;border-radius:999px}

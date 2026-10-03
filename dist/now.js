@@ -68,7 +68,7 @@ $('nowDone').onclick=()=>{const a=nowPrincipale;if(!a)return;const n=structuredC
  else if(a.tipo==='work'){const w=(n.work||[]).find(x=>x.id===a.id);if(!w)return;w.done=true;}
  else if(a.tipo==='family'){n.family=GiornoDaily.completeFamily(entries('family'),a.id,today(),()=>crypto.randomUUID());}
  else return;
- if(commit(n))message('Fatta. Avanti con la prossima.');};
+ commitAnnullabile(n,'“'+a.titolo+'” fatta.');};
 document.addEventListener('click',e=>{const b=e.target.closest('[data-alt],[data-reset]');if(!b)return;
  if(b.dataset.reset){saltati=[];renderNow();return;}
  apri(nowAlternative[Number(b.dataset.alt)]);});

@@ -81,5 +81,9 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-result]');
  else if(r.area==='family'){switchArea('family');if(r.date)day(r.date);}
  else {switchArea('today');$('inboxList').scrollIntoView({behavior:'smooth',block:'center'});}
  message(r.title);});
-const vista=new URLSearchParams(location.search).get('vista');
+const parametri=new URLSearchParams(location.search);
+const condiviso=[parametri.get('title'),parametri.get('text'),parametri.get('url')].filter(Boolean).join(' ').trim();
+if(condiviso){$('captureText').value=condiviso.slice(0,140);$('captureForm').requestSubmit();
+ try{history.replaceState(null,'',location.pathname);}catch{}}
+const vista=parametri.get('vista');
 if(vista==='settimana')switchArea('week');else if(vista==='cerca')$('openSearch').click();else if(vista==='tempo')$('freeNow').click();else if(vista==='adesso'&&window.aggiornaLuogoOra)aggiornaLuogoOra();

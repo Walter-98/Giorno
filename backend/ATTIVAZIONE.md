@@ -14,6 +14,13 @@ La versione locale funziona già. Famiglia online e Web Push richiedono un servi
 
 Le faccende condivise compaiono direttamente nella scheda Famiglia, con l’etichetta “Condivisa”, e si aggiornano ogni dieci secondi mentre quella scheda è aperta. La lista della spesa è stata tolta dall’app (set 2026): le vecchie voci con kind='shop' restano nel database ma non sono più mostrate; per eliminarle definitivamente: `delete from public.giorno_items where kind='shop';`. Portano solo titolo, persona e stato: data, ripetizione e preavviso restano sul dispositivo che le ha create. Le liste condivise sono separate da quelle personali. Non viene caricato automaticamente il programma privato. La sincronizzazione si aggiorna ogni dieci secondi mentre la lista è aperta. Le scritture richiedono connessione; i conflitti tra modifiche simultanee vengono rifiutati invece di sovrascrivere dati. L’amministratore può revocare un membro; i membri possono lasciare il gruppo. Per rimuovere il creatore serve una futura funzione di trasferimento proprietà.
 
+## Programma personale su più dispositivi
+
+1. Eseguire `sync.sql` nel SQL Editor, dopo `setup.sql`. Crea la tabella `giorno_personal` (una riga per persona) e le due funzioni `giorno_personal_get` / `giorno_personal_put`.
+2. Non serve altro: dentro l'app, in "Famiglia online", compare l'interruttore "Tieni allineato il programma personale fra i miei dispositivi", attivo di suo.
+3. Come funziona: una sola copia per persona, con un numero di revisione. Chi scrive deve dichiarare la revisione che ha visto; se nel frattempo un altro dispositivo ha salvato, il server rifiuta, l'app scarica la versione nuova e mette da parte quella locale in `giorno-copia-locale` (nello spazio del browser). Nessuno vede il programma di un altro: le funzioni leggono e scrivono solo la riga di chi ha fatto l'accesso.
+4. Finché `sync.sql` non viene eseguito, l'app lo scrive nello stato e continua a funzionare come prima, tutto in locale.
+
 ## Web Push
 
 1. Eseguire `push.sql` dopo `setup.sql`.
