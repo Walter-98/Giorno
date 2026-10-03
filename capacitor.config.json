@@ -1,0 +1,11 @@
+{
+  "appId": "io.github.walter98.giorno",
+  "appName": "Giorno",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": false
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}

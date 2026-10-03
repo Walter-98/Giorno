@@ -1,0 +1,38 @@
+name: App Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'dist/**'
+      - 'android/**'
+      - 'capacitor.config.json'
+      - 'package.json'
+      - '.github/workflows/android.yml'
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npx cap sync android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Compila l'APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+      - name: Rinomina
+        run: mv android/app/build/outputs/apk/debug/app-debug.apk giorno.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: giorno-apk
+          path: giorno.apk
+          retention-days: 30

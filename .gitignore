@@ -10,3 +10,12 @@ Giorno - Google Play package.zip
 *.aab
 # cartelle di lavoro locali
 Claude outputs/
+# capacitor / android
+node_modules/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/app/src/main/assets/public/
+.DS_Store

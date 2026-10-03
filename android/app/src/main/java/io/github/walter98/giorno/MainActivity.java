@@ -1,0 +1,12 @@
+package io.github.walter98.giorno;
+
+import android.os.Bundle;
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(GeofencePlugin.class);
+        super.onCreate(savedInstanceState);
+    }
+}

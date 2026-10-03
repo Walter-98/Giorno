@@ -118,3 +118,64 @@ renderNow();
 if(luoghi().length&&navigator.permissions&&navigator.permissions.query)
  navigator.permissions.query({name:'geolocation'}).then(p=>{if(p.state==='granted'){aggiornaLuogo(false);avviaSorveglianza();}}).catch(()=>{});
 window.aggiornaLuogoOra=()=>{window.scrollTo(0,0);aggiornaLuogo(true);};
+
+// ---- versione Android: i luoghi li sorveglia il sistema -------------------
+const pluginGeofence=()=>{try{return window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Geofence||null;}catch{return null;}};
+let codaGeofence=null;
+function testoPerLuogo(p){const r=GiornoExtras.prossimaAzione(data,{now:new Date(),luogo:p});
+ return r.principale?r.principale.titolo:'Niente in sospeso qui.';}
+async function sincronizzaGeofence(){
+ const G=pluginGeofence();if(!G)return;
+ try{
+  const l=luoghi();
+  if(!l.length){await G.ferma();return;}
+  const permessi=await G.permessi();
+  if(!permessi.posizione)return;
+  await G.imposta({luoghi:l.map(p=>({id:p.id,name:p.name,lat:p.lat,lon:p.lon,radius:p.radius,testo:testoPerLuogo(p)}))});
+ }catch(e){}}
+window.queueGeofenceSync=()=>{clearTimeout(codaGeofence);codaGeofence=setTimeout(sincronizzaGeofence,2500);};
+async function mostraStatoNativo(){
+ const G=pluginGeofence();if(!G)return;
+ const p=await G.permessi();
+ const mancanti=[!p.posizione&&'la posizione',!p.sempre&&'il permesso “Consenti sempre”',!p.notifiche&&'le notifiche'].filter(Boolean);
+ $('nativoStato').textContent=mancanti.length?('Manca ancora '+mancanti.join(', ')+'.'):(luoghi().length?'Attivo: Android ti avviserà quando arrivi in uno dei tuoi luoghi.':'Tutto concesso. Salva un luogo e sei a posto.');
+ $('apriImpostazioni').hidden=!(p.posizione&&!p.sempre);
+ $('attivaArrivi').hidden=!mancanti.length;}
+if(pluginGeofence()){
+ $('nativoBox').hidden=false;$('watchWrap').hidden=true;
+ mostraStatoNativo();
+ $('attivaArrivi').onclick=async()=>{const G=pluginGeofence();
+  try{$('nativoStato').textContent='Sto chiedendo i permessi…';
+   let p=await G.chiediPosizione();
+   if(!p.posizione){$('nativoStato').textContent='Senza il permesso di posizione non posso avvisarti all’arrivo.';return;}
+   if(!p.notifiche)p=await G.chiediNotifiche();
+   if(!p.sempre)p=await G.chiediSempre();
+   await sincronizzaGeofence();await mostraStatoNativo();}
+  catch{$('nativoStato').textContent='Non è andata a buon fine. Riprova dalle impostazioni del telefono.';}};
+ $('apriImpostazioni').onclick=()=>{const G=pluginGeofence();G.apriImpostazioni();message('Scegli “Posizione → Consenti sempre”, poi torna qui.');};
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')mostraStatoNativo();});
+}
+
+// ---- promemoria del telefono, senza bisogno del servizio online ----------
+const pluginNotifiche=()=>{try{return window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()&&window.Capacitor.Plugins&&window.Capacitor.Plugins.LocalNotifications||null;}catch{return null;}};
+const numeroDa=t=>{let n=0;for(let i=0;i<t.length;i++){n=(n*31+t.charCodeAt(i))|0;}return Math.abs(n%2000000000)+1;};
+let codaNotifiche=null,notificheMesse=[];
+async function sincronizzaNotificheNative(){
+ const N=pluginNotifiche();if(!N)return;
+ try{
+  const permesso=await N.checkPermissions();
+  if(permesso.display!=='granted')return;
+  if(notificheMesse.length)await N.cancel({notifications:notificheMesse.map(id=>({id}))});
+  const lavori=(typeof pushJobs==='function'?pushJobs():[]).filter(x=>Date.parse(x.due)>Date.now()).slice(0,60);
+  notificheMesse=lavori.map(x=>numeroDa(x.key));
+  if(!lavori.length)return;
+  await N.schedule({notifications:lavori.map((x,i)=>({
+   id:notificheMesse[i],title:'Giorno',body:x.title,schedule:{at:new Date(x.due),allowWhileIdle:true},smallIcon:'ic_stat_giorno'}))});
+ }catch(e){}}
+window.queueNotificheNative=()=>{clearTimeout(codaNotifiche);codaNotifiche=setTimeout(sincronizzaNotificheNative,3000);};
+async function chiediNotificheNative(){const N=pluginNotifiche();if(!N)return false;
+ try{const p=await N.requestPermissions();return p.display==='granted';}catch{return false;}}
+if(pluginNotifiche()){
+ chiediNotificheNative().then(ok=>{if(ok)sincronizzaNotificheNative();});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')window.queueNotificheNative();});
+}
