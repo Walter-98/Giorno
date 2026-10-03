@@ -86,3 +86,59 @@ test('il resoconto confronta stima e tempo reale', ()=>{
  const r=x.weekReport(data,'2026-09-14','2026-09-20');
  assert.equal(r.misurate,1);assert.equal(r.stima,30);assert.equal(r.reale,45);
 });
+
+test('i luoghi si riconoscono dalla distanza', ()=>{
+ const luoghi=[{id:'L',name:'Lavoro',kind:'lavoro',lat:43.8,lon:13.0,radius:200},
+               {id:'C',name:'Casa',kind:'casa',lat:43.85,lon:13.05,radius:150}];
+ assert.equal(x.luogoDi(luoghi,{lat:43.8001,lon:13.0001}).id,'L');
+ assert.equal(x.luogoDi(luoghi,{lat:43.8501,lon:13.0501}).id,'C');
+ assert.equal(x.luogoDi(luoghi,{lat:44.2,lon:12.5}),null);
+ assert.equal(x.luogoDi([],{lat:43.8,lon:13}),null);
+ assert.equal(x.luogoDi(luoghi,null),null);
+ assert.ok(Math.abs(x.distanza({lat:43.8,lon:13},{lat:43.81,lon:13})-1112)<30);
+});
+test('adesso sceglie in base al luogo', ()=>{
+ const now=new Date('2026-10-05T10:00:00');
+ const luoghi={lavoro:{id:'L',name:'Lavoro',kind:'lavoro'},casa:{id:'C',name:'Casa',kind:'casa'},spesa:{id:'S',name:'Conad',kind:'spesa'}};
+ const data={blocks:[],inbox:[],
+  work:[{id:'w1',title:'Offerta',date:'2026-10-05',minutes:30,priority:false,done:false}],
+  family:[{id:'f1',title:'Lavatrice',done:false,person:'',repeat:'none'}],
+  shop:[{id:'s1',title:'Latte',done:false,qty:''}]};
+ assert.equal(x.prossimaAzione(data,{now,luogo:luoghi.lavoro}).principale.titolo,'Offerta');
+ assert.equal(x.prossimaAzione(data,{now,luogo:luoghi.casa}).principale.titolo,'Lavatrice');
+ assert.equal(x.prossimaAzione(data,{now,luogo:luoghi.spesa}).principale.tipo,'shop');
+ assert.equal(x.prossimaAzione(data,{now,luogo:luoghi.lavoro}).contesto,'Sei a Lavoro');
+});
+test('adesso mette davanti quello che sta per iniziare', ()=>{
+ const now=new Date('2026-10-05T10:00:00');
+ const data={blocks:[{id:'b1',title:'Riunione',date:'2026-10-05',start:'10:20',end:'11:00',kind:'fixed',important:false,done:false},
+                     {id:'b2',title:'Pomeriggio',date:'2026-10-05',start:'15:00',end:'16:00',kind:'task',important:false,done:false}],
+  inbox:[],work:[],family:[],shop:[]};
+ assert.equal(x.prossimaAzione(data,{now}).principale.titolo,'Riunione');
+ const inCorso=x.prossimaAzione(data,{now:new Date('2026-10-05T10:30:00')});
+ assert.match(inCorso.principale.motivo,/è adesso/);
+ const saltata=x.prossimaAzione(data,{now,saltati:['block:b1']});
+ assert.equal(saltata.principale.titolo,'Pomeriggio');
+ assert.equal(x.prossimaAzione({blocks:[],inbox:[],work:[],family:[],shop:[]},{now}).principale,null);
+});
+test('una cosa legata a un luogo non salta fuori altrove', ()=>{
+ const now=new Date('2026-10-05T10:00:00');
+ const casa={id:'C',name:'Casa',kind:'casa'},lavoro={id:'L',name:'Lavoro',kind:'lavoro'};
+ const data={blocks:[],inbox:[],work:[],shop:[],
+  family:[{id:'f1',title:'Innaffiare',done:false,person:'',repeat:'none',place:'C'},
+          {id:'f2',title:'Chiamare il comune',done:false,person:'',repeat:'none'}]};
+ assert.equal(x.prossimaAzione(data,{now,luogo:casa}).principale.titolo,'Innaffiare');
+ assert.equal(x.prossimaAzione(data,{now,luogo:lavoro}).principale.titolo,'Chiamare il comune');
+});
+test('i riassunti di contesto dicono da dove partire', ()=>{
+ const now=new Date('2026-10-05T08:00:00');
+ const data={blocks:[{id:'b',title:'Visita',date:'2026-10-06',start:'09:00',end:'10:00',kind:'fixed',done:false}],
+  work:[{id:'w',title:'Offerta',date:'2026-10-05',minutes:30,priority:true,done:false}],
+  family:[{id:'f',title:'Spazzatura',done:false,person:'',repeat:'none'}],
+  shop:[{id:'s',title:'Latte',done:false,qty:''}],inbox:[]};
+ assert.match(x.digestContesto(data,'lavoro',now),/Offerta/);
+ assert.match(x.digestContesto(data,'casa',now),/Spazzatura/);
+ assert.match(x.digestContesto(data,'casa',now),/spesa/);
+ assert.match(x.digestContesto(data,'sera',now),/Domani/);
+ assert.equal(x.digestContesto({work:[],family:[],shop:[],blocks:[]},'lavoro',now),'');
+});

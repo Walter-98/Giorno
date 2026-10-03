@@ -14,3 +14,16 @@ test('note, durate reali e preferenze vengono controllate',()=>{
  assert.equal(m.validExtra({prefs:{theme:'viola',size:'grande'}}),false);
  assert.equal(m.validExtra({shop:[{id:'s',title:'Latte',done:false,qty:'1 L'}]}),true);
 });
+
+test('luoghi e avvisi di contesto vengono controllati',()=>{
+ const posto={id:'p1',name:'Casa',kind:'casa',lat:43.8,lon:13.0,radius:150};
+ assert.equal(m.validPlaces([posto]),true);
+ assert.equal(m.validPlaces([{...posto,lat:200}]),false);
+ assert.equal(m.validPlaces([{...posto,kind:'bar'}]),false);
+ assert.equal(m.validPlaces([{...posto,radius:10}]),false);
+ assert.equal(m.validPlaces([posto,{...posto}]),false);
+ assert.equal(m.validContext({lavoro:'08:00',casa:'',sera:'21:00',watch:true}),true);
+ assert.equal(m.validContext({lavoro:'99:00'}),false);
+ assert.equal(m.validExtra({family:[{id:'f',title:'x',done:false,person:'',repeat:'none',place:'p1'}],places:[posto]}),true);
+ assert.equal(m.validExtra({shop:[{id:'s',title:'Latte',done:false,qty:'1 L',place:'p1'}]}),true);
+});

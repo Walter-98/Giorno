@@ -82,4 +82,4 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-result]');
  else {switchArea('today');$('inboxList').scrollIntoView({behavior:'smooth',block:'center'});}
  message(r.title);});
 const vista=new URLSearchParams(location.search).get('vista');
-if(vista==='settimana')switchArea('week');else if(vista==='cerca')$('openSearch').click();else if(vista==='tempo')$('freeNow').click();
+if(vista==='settimana')switchArea('week');else if(vista==='cerca')$('openSearch').click();else if(vista==='tempo')$('freeNow').click();else if(vista==='adesso'&&window.aggiornaLuogoOra)aggiornaLuogoOra();

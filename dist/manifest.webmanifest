@@ -58,9 +58,9 @@
   ],
   "shortcuts": [
     {
-      "name": "Ho tempo adesso",
-      "short_name": "Tempo libero",
-      "url": "./?vista=tempo"
+      "name": "Cosa faccio adesso",
+      "short_name": "Adesso",
+      "url": "./?vista=adesso"
     },
     {
       "name": "La settimana",
