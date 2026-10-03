@@ -16,7 +16,8 @@ async function aggiornaLuogo(chiesto){
 
 window.renderNow=function(){
  if(!$('nowCard'))return;
- const r=GiornoExtras.prossimaAzione(data,{now:new Date(),luogo:luogoCorrente,saltati});
+ const rinviati=GiornoDaily.rinviiAttivi(data.snoozed,new Date());
+ const r=GiornoExtras.prossimaAzione(data,{now:new Date(),luogo:luogoCorrente,saltati:[...saltati,...rinviati]});
  $('placeChip').textContent=luogoCorrente?'◎ '+luogoCorrente.name:(luoghi().length?'◎ Dove sono adesso':'◎ Aggiungi un luogo');
  $('placeChip').classList.toggle('attivo',!!luogoCorrente);
  nowPrincipale=r.principale;nowAlternative=r.alternative;
@@ -43,7 +44,25 @@ function apri(a){if(!a)return;
  else {switchArea('today');$('inboxList').scrollIntoView({behavior:'smooth',block:'center'});}}
 
 $('nowOpen').onclick=()=>apri(nowPrincipale);
-$('nowSkip').onclick=()=>{if(!nowPrincipale)return;saltati.push(nowPrincipale.tipo+':'+nowPrincipale.id);renderNow();};
+$('nowSkip').onclick=()=>{if(!nowPrincipale)return;$('nowSnooze').hidden=!$('nowSnooze').hidden;};
+function quandoRinvio(scelta){const d=new Date();
+ if(scelta==='60'){d.setMinutes(d.getMinutes()+60);return d;}
+ if(scelta==='sera'){d.setHours(20,0,0,0);if(d<=new Date())d.setDate(d.getDate()+1);return d;}
+ if(scelta==='domani'){d.setDate(d.getDate()+1);d.setHours(8,0,0,0);return d;}
+ return null;}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-rinvio]');if(!b||!nowPrincipale)return;
+ const chiave=nowPrincipale.tipo+':'+nowPrincipale.id,titolo=nowPrincipale.titolo,quando=quandoRinvio(b.dataset.rinvio);
+ $('nowSnooze').hidden=true;
+ if(!quando){saltati.push(chiave);renderNow();message('Nascosta fino alla prossima apertura.');return;}
+ const n=structuredClone(data);n.snoozed={...(data.snoozed||{}),[chiave]:quando.toISOString()};
+ for(const k of Object.keys(n.snoozed))if(Date.parse(n.snoozed[k])<Date.now()-7*86400000)delete n.snoozed[k];
+ if(!GiornoDaily.validSnoozed(n.snoozed)){message('Non sono riuscito a rinviarla.');return;}
+ if(commit(n)){programmaRinvio(chiave,titolo,quando);
+  message('Te la ricordo '+(b.dataset.rinvio==='60'?'fra un\u2019ora':b.dataset.rinvio==='sera'?'stasera':'domani mattina')+'.');}});
+async function programmaRinvio(chiave,titolo,quando){
+ const N=pluginNotifiche&&pluginNotifiche();
+ if(N){try{await N.schedule({notifications:[{id:numeroDa('rinvio:'+chiave+quando.toISOString()),title:'Giorno',body:titolo,schedule:{at:quando,allowWhileIdle:true},smallIcon:'ic_stat_giorno'}]});}catch{}return;}
+ try{if('Notification'in window&&Notification.permission==='granted')setTimeout(()=>avvisa('Giorno',titolo),Math.min(2147483000,quando.getTime()-Date.now()));}catch{}}
 $('nowDone').onclick=()=>{const a=nowPrincipale;if(!a)return;const n=structuredClone(data);
  if(a.tipo==='block'){const b=n.blocks.find(x=>x.id===a.id);if(!b)return;b.done=true;}
  else if(a.tipo==='work'){const w=(n.work||[]).find(x=>x.id===a.id);if(!w)return;w.done=true;}
@@ -58,6 +77,10 @@ $('placeChip').onclick=()=>{if(!luoghi().length){$('placesDialog').showModal();r
 function renderPlaces(){
  $('placesList').innerHTML=luoghi().map(p=>`<article class="daily-row"><div><strong>${esc(p.name)}</strong><p>${etichettaLuogo[p.kind]} · raggio ${p.radius} m${luogoCorrente&&luogoCorrente.id===p.id?' · sei qui':''}</p></div><button class="quiet" data-place-del="${esc(p.id)}">Elimina</button></article>`).join('')||'<div class="list-empty">Nessun luogo salvato.<br>Vai dove vuoi salvare (casa, lavoro, supermercato) e premi il tasto qui sotto.</div>';
  $('watchPlaces').checked=!!contesto().watch;}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-posto]');if(!b)return;
+ const tipo=b.dataset.posto,nomi={casa:'Casa',lavoro:'Lavoro',spesa:'Supermercato'};
+ $('placeName').value=nomi[tipo];$('placeKind').value=tipo;$('placeRadius').value=tipo==='spesa'?120:150;
+ $('placeForm').requestSubmit();});
 $('openPlaces').onclick=()=>{$('placeError').textContent='';renderPlaces();$('placesDialog').showModal();};
 $('placeForm').onsubmit=async e=>{e.preventDefault();const nome=$('placeName').value.trim(),tipo=$('placeKind').value,raggio=Number($('placeRadius').value);
  $('placeError').textContent='Sto leggendo la posizione…';
@@ -179,3 +202,16 @@ if(pluginNotifiche()){
  chiediNotificheNative().then(ok=>{if(ok)sincronizzaNotificheNative();});
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')window.queueNotificheNative();});
 }
+
+function controllaBackup(){
+ const el=$('backupNudge');if(!el)return;
+ const roba=(data.blocks||[]).length+(data.work||[]).length+(data.family||[]).length+(data.inbox||[]).length;
+ if(roba<5){el.hidden=true;return;}
+ const ultimo=data.lastBackup?Date.parse(data.lastBackup):0;
+ const giorni=ultimo?Math.round((Date.now()-ultimo)/86400000):null;
+ if(giorni!==null&&giorni<30){el.hidden=true;return;}
+ el.hidden=false;
+ el.textContent=ultimo?`Ultimo backup ${giorni} giorni fa. I tuoi dati stanno solo su questo telefono: esportane una copia dal fondo della pagina.`
+  :'Non hai mai esportato un backup. I tuoi dati stanno solo su questo telefono: una copia ogni tanto ti salva da una brutta sorpresa.';}
+window.segnaBackup=()=>{const n=structuredClone(data);n.lastBackup=new Date().toISOString();commit(n);};
+controllaBackup();

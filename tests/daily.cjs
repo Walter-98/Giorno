@@ -27,3 +27,16 @@ test('luoghi e avvisi di contesto vengono controllati',()=>{
  assert.equal(m.validExtra({family:[{id:'f',title:'x',done:false,person:'',repeat:'none',place:'p1'}],places:[posto]}),true);
  assert.equal(m.validExtra({shop:[{id:'s',title:'Latte',done:false,qty:'1 L',place:'p1'}]}),true);
 });
+
+test('i rinvii e la data dell ultimo backup vengono controllati',()=>{
+ const ora=new Date('2026-10-03T12:00:00');
+ assert.equal(m.validSnoozed(undefined),true);
+ assert.equal(m.validSnoozed({'work:w1':'2026-10-03T15:00:00.000Z'}),true);
+ assert.equal(m.validSnoozed({'work:w1':'domani'}),false);
+ assert.equal(m.validSnoozed([]),false);
+ assert.equal(JSON.stringify(m.rinviiAttivi({a:'2026-10-03T15:00:00Z',b:'2026-10-03T09:00:00Z'},ora)),JSON.stringify(['a']));
+ assert.equal(m.rinviiAttivi(undefined,ora).length,0);
+ assert.equal(m.validExtra({lastBackup:'2026-10-03T10:00:00.000Z'}),true);
+ assert.equal(m.validExtra({lastBackup:'ieri'}),false);
+ assert.equal(m.validExtra({snoozed:{'family:f1':'2026-10-04T08:00:00.000Z'}}),true);
+});
