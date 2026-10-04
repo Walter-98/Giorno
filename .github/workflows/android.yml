@@ -38,7 +38,3 @@ jobs:
           name: giorno-apk
           path: giorno.apk
           retention-days: 30
-        with:
-          name: giorno-apk
-          path: giorno.apk
-          retention-days: 30
