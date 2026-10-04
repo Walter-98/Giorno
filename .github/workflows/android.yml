@@ -25,7 +25,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      -       - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools'
       - name: Compila l'APK
@@ -34,6 +34,10 @@ jobs:
       - name: Rinomina
         run: mv android/app/build/outputs/apk/debug/app-debug.apk giorno.apk
       - uses: actions/upload-artifact@v4
+        with:
+          name: giorno-apk
+          path: giorno.apk
+          retention-days: 30
         with:
           name: giorno-apk
           path: giorno.apk
